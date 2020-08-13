@@ -153,6 +153,7 @@ class Variable(object):
     def unify(self, value):
         if type(value) == str:
             fun = PL_unify_atom_chars
+            value = value.encode('utf-8')
         elif type(value) == int:
             fun = PL_unify_integer
         elif type(value) == bool:
