@@ -1057,6 +1057,11 @@ PL_halt.restype = None
 PL_cleanup = _lib.PL_cleanup
 PL_cleanup.restype = c_int
 
+PL_unify_atom_chars = _lib.PL_unify_atom_chars
+
+PL_unify_atom_chars.argtypes = [term_t, c_char_p]
+PL_unify_atom_chars.restype = c_int
+
 PL_unify_integer = _lib.PL_unify_integer
 PL_unify_atom_chars = _lib.PL_unify_atom_chars
 
