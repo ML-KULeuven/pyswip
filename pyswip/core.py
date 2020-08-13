@@ -122,7 +122,7 @@ def _findSwiplFromExec():
                     fullName = None
 
             elif platform == "dar":
-                dllName = 'lib' + rtvars['PLLIB'][2:] + '.' + rtvars['PLSOEXT']
+                dllName = 'lib' + rtvars['PLLIB'][2:] + '.' + "dylib"
                 path = os.path.join(rtvars['PLBASE'], 'lib', rtvars['PLARCH'])
                 baseName = os.path.join(path, dllName)
 
@@ -307,7 +307,7 @@ def get_swi_ver():
     import re
     swi_ver = input(
                 'Please enter you SWI-Prolog version in format "X.Y.Z": ')
-    match = re.search(r'[0-9]\.[0-9]\.[0-9]')
+    match = re.search(r'[0-9]+\.[0-9]+\.[0-9]+', swi_ver)
     if match is None:
         raise InputError('Error, type normal version')
     
@@ -338,9 +338,8 @@ def _findSwiplMacOSHome():
         path = os.environ.get('SWI_LIB_DIR')
         if path is None:
             path = os.environ.get('PLBASE')
-            if path is None:
-                swi_ver = get_swi_ver()
-                path = '/Applications/SWI-Prolog.app/Contents/swipl-' + swi_ver + '/lib/'
+            if path is None:                
+                path = '/Applications/SWI-Prolog.app/Contents/'
     
     paths = [path]
 
@@ -572,6 +571,30 @@ _fixWindowsPath(_path)
 # Load the library
 _lib = CDLL(_path, mode=RTLD_GLOBAL)
 
+#       /*******************************
+#        *	      VERSIONS		*
+#        *******************************/
+
+PL_VERSION_SYSTEM	=1	# Prolog version
+PL_VERSION_FLI		=2	# PL_* compatibility
+PL_VERSION_REC		=3	# PL_record_external() compatibility
+PL_VERSION_QLF		=4	# Saved QLF format version
+PL_VERSION_QLF_LOAD	=5	# Min loadable QLF format version
+PL_VERSION_VM		=6	# VM signature
+PL_VERSION_BUILT_IN	=7	# Built-in predicate signature
+
+try:
+    PL_version = _lib.PL_version
+    PL_version.argtypes = [c_int]
+    PL_version.restype = c_uint
+
+    PL_VERSION = PL_version(PL_VERSION_SYSTEM)
+    if PL_VERSION<80200:
+        raise Exception("swi-prolog>= 8.2.0 is required")
+except AttributeError:
+    PL_VERSION=70000  # Best guess. When was PL_version introduced?
+
+
 # PySwip constants
 PYSWIP_MAXSTR = 1024
 c_int_p = c_void_p
@@ -579,42 +602,109 @@ c_long_p = c_void_p
 c_double_p = c_void_p
 c_uint_p = c_void_p
 
+
+#
 # constants (from SWI-Prolog.h)
-# PL_unify_term() arguments
-PL_VARIABLE = 1  # nothing
-PL_ATOM = 2  # const char
-PL_INTEGER = 3  # int
-PL_FLOAT = 4  # double
-PL_STRING = 5  # const char *
-PL_TERM = 6  #
-# PL_unify_term()
-PL_FUNCTOR = 10  # functor_t, arg ...
-PL_LIST = 11  # length, arg ...
-PL_CHARS = 12  # const char *
-PL_POINTER = 13  # void *
-#               /* PlArg::PlArg(text, type) */
-#define PL_CODE_LIST     (14)       /* [ascii...] */
-#define PL_CHAR_LIST     (15)       /* [h,e,l,l,o] */
-#define PL_BOOL      (16)       /* PL_set_feature() */
-#define PL_FUNCTOR_CHARS (17)       /* PL_unify_term() */
-#define _PL_PREDICATE_INDICATOR (18)    /* predicate_t (Procedure) */
-#define PL_SHORT     (19)       /* short */
-#define PL_INT       (20)       /* int */
-#define PL_LONG      (21)       /* long */
-#define PL_DOUBLE    (22)       /* double */
-#define PL_NCHARS    (23)       /* unsigned, const char * */
-#define PL_UTF8_CHARS    (24)       /* const char * */
-#define PL_UTF8_STRING   (25)       /* const char * */
-#define PL_INT64     (26)       /* int64_t */
-#define PL_NUTF8_CHARS   (27)       /* unsigned, const char * */
-#define PL_NUTF8_CODES   (29)       /* unsigned, const char * */
-#define PL_NUTF8_STRING  (30)       /* unsigned, const char * */
-#define PL_NWCHARS   (31)       /* unsigned, const wchar_t * */
-#define PL_NWCODES   (32)       /* unsigned, const wchar_t * */
-#define PL_NWSTRING  (33)       /* unsigned, const wchar_t * */
-#define PL_MBCHARS   (34)       /* const char * */
-#define PL_MBCODES   (35)       /* const char * */
-#define PL_MBSTRING  (36)       /* const char * */
+# /* PL_unify_term( arguments */
+
+
+if PL_VERSION<80200:
+    # constants (from SWI-Prolog.h)
+    # PL_unify_term() arguments
+    PL_VARIABLE = 1  # nothing
+    PL_ATOM = 2  # const char
+    PL_INTEGER = 3  # int
+    PL_FLOAT = 4  # double
+    PL_STRING = 5  # const char *
+    PL_TERM = 6  #
+    # PL_unify_term()
+    PL_FUNCTOR = 10  # functor_t, arg ...
+    PL_LIST = 11  # length, arg ...
+    PL_CHARS = 12  # const char *
+    PL_POINTER = 13  # void *
+    #               /* PlArg::PlArg(text, type) */
+    #define PL_CODE_LIST     (14)       /* [ascii...] */
+    #define PL_CHAR_LIST     (15)       /* [h,e,l,l,o] */
+    #define PL_BOOL      (16)       /* PL_set_feature() */
+    #define PL_FUNCTOR_CHARS (17)       /* PL_unify_term() */
+    #define _PL_PREDICATE_INDICATOR (18)    /* predicate_t (Procedure) */
+    #define PL_SHORT     (19)       /* short */
+    #define PL_INT       (20)       /* int */
+    #define PL_LONG      (21)       /* long */
+    #define PL_DOUBLE    (22)       /* double */
+    #define PL_NCHARS    (23)       /* unsigned, const char * */
+    #define PL_UTF8_CHARS    (24)       /* const char * */
+    #define PL_UTF8_STRING   (25)       /* const char * */
+    #define PL_INT64     (26)       /* int64_t */
+    #define PL_NUTF8_CHARS   (27)       /* unsigned, const char * */
+    #define PL_NUTF8_CODES   (29)       /* unsigned, const char * */
+    #define PL_NUTF8_STRING  (30)       /* unsigned, const char * */
+    #define PL_NWCHARS   (31)       /* unsigned, const wchar_t * */
+    #define PL_NWCODES   (32)       /* unsigned, const wchar_t * */
+    #define PL_NWSTRING  (33)       /* unsigned, const wchar_t * */
+    #define PL_MBCHARS   (34)       /* const char * */
+    #define PL_MBCODES   (35)       /* const char * */
+    #define PL_MBSTRING  (36)       /* const char * */
+
+    REP_ISO_LATIN_1 = 0x0000 # output representation
+    REP_UTF8 = 0x1000
+    REP_MB = 0x2000
+
+else:
+    PL_VARIABLE     = 1            # nothing
+    PL_ATOM         = 2            # const char *
+    PL_INTEGER      = 3            # int
+    PL_RATIONAL     = 4            # rational number
+    PL_FLOAT        = 5            # double
+    PL_STRING       = 6            # const char *
+    PL_TERM         = 7
+
+    PL_NIL          = 8            # The constant []
+    PL_BLOB         = 9            # non-atom blob
+    PL_LIST_PAIR    = 10           # [_|_] term
+
+    # # PL_unify_term(
+    PL_FUNCTOR      = 11           # functor_t, arg ...
+    PL_LIST         = 12           # length, arg ...
+    PL_CHARS        = 13           # const char *
+    PL_POINTER      = 14           # void *
+    # PlArg::PlArg(text, type
+    PL_CODE_LIST    = 15           # [ascii...]
+    PL_CHAR_LIST    = 16           # [h,e,l,l,o]
+    PL_BOOL         = 17           # PL_set_prolog_flag(
+    PL_FUNCTOR_CHARS= 18           # PL_unify_term(
+    _PL_PREDICATE_INDICATOR= 19    # predicate_t= Procedure
+    PL_SHORT        = 20           # short
+    PL_INT          = 21           # int
+    PL_LONG         = 22           # long
+    PL_DOUBLE       = 23           # double
+    PL_NCHARS       = 24           # size_t, const char *
+    PL_UTF8_CHARS   = 25           # const char *
+    PL_UTF8_STRING  = 26           # const char *
+    PL_INT64        = 27           # int64_t
+    PL_NUTF8_CHARS  = 28           # size_t, const char *
+    PL_NUTF8_CODES  = 29           # size_t, const char *
+    PL_NUTF8_STRING = 30           # size_t, const char *
+    PL_NWCHARS      = 31           # size_t, const wchar_t *
+    PL_NWCODES      = 32           # size_t, const wchar_t *
+    PL_NWSTRING     = 33           # size_t, const wchar_t *
+    PL_MBCHARS      = 34           # const char *
+    PL_MBCODES      = 35           # const char *
+    PL_MBSTRING     = 36           # const char *
+    PL_INTPTR       = 37           # intptr_t
+    PL_CHAR         = 38           # int
+    PL_CODE         = 39           # int
+    PL_BYTE         = 40           # int
+    # PL_skip_list(
+    PL_PARTIAL_LIST = 41           # a partial list
+    PL_CYCLIC_TERM  = 42           # a cyclic list/term
+    PL_NOT_A_LIST   = 43           # Object is not a list
+    # dicts
+    PL_DICT         = 44
+
+    REP_ISO_LATIN_1 = 0x0000  # output representation
+    REP_UTF8 = 0x00100000
+    REP_MB = 0x00200000
 
 #       /********************************
 #       * NON-DETERMINISTIC CALL/RETURN *
@@ -682,6 +772,10 @@ BUF_MALLOC = 0x0200
 
 CVT_EXCEPTION = 0x10000  # throw exception on error
 
+
+
+
+
 argv = list_to_bytes_list(sys.argv + [None])
 argc = len(sys.argv)
 
@@ -726,6 +820,9 @@ PL_initialise = _lib.PL_initialise
 PL_initialise = check_strings(None, 1)(PL_initialise)
 #PL_initialise.argtypes = [c_int, c_c??
 
+#unsigned int PL_version(int key)
+
+
 PL_open_foreign_frame = _lib.PL_open_foreign_frame
 PL_open_foreign_frame.restype = fid_t
 
@@ -765,6 +862,10 @@ PL_call_predicate.restype = c_int
 PL_discard_foreign_frame = _lib.PL_discard_foreign_frame
 PL_discard_foreign_frame.argtypes = [fid_t]
 PL_discard_foreign_frame.restype = None
+
+PL_put_chars = _lib.PL_put_chars
+PL_put_chars.argtypes = [term_t, c_int, c_size_t, c_char_p]
+PL_put_chars.restype = c_int
 
 PL_put_list_chars = _lib.PL_put_list_chars
 PL_put_list_chars.argtypes = [term_t, c_char_p]
@@ -815,6 +916,8 @@ PL_get_string_chars.argtypes = [term_t, POINTER(c_char_p), c_int_p]
 
 #PL_EXPORT(int)         PL_get_chars(term_t t, char **s, unsigned int flags);
 PL_get_chars = _lib.PL_get_chars  # FIXME:
+PL_get_chars.argtypes = [term_t, POINTER(c_char_p), c_uint]
+PL_get_chars.restype = c_int
 
 PL_get_chars = check_strings(None, 1)(PL_get_chars)
 
@@ -888,6 +991,10 @@ PL_atom_chars = _lib.PL_atom_chars
 PL_atom_chars.argtypes = [atom_t]
 PL_atom_chars.restype = c_char_p
 
+PL_atom_wchars = _lib.PL_atom_wchars
+PL_atom_wchars.argtypes = [atom_t, POINTER(c_size_t)]
+PL_atom_wchars.restype = c_wchar_p
+
 PL_predicate = _lib.PL_predicate
 PL_predicate.argtypes = [c_char_p, c_int, c_char_p]
 PL_predicate.restype = predicate_t
@@ -939,13 +1046,41 @@ PL_unify_atom_chars.argtypes = [term_t, c_char_p]
 PL_unify_atom_chars.restype = c_int
 
 PL_unify_integer = _lib.PL_unify_integer
+PL_unify_atom_chars = _lib.PL_unify_atom_chars
 
 PL_unify_float = _lib.PL_unify_float
 PL_unify_float.argtypes = [term_t, c_double]
 PL_unify_float.restype = c_int
 
+PL_unify_bool = _lib.PL_unify_bool
+PL_unify_bool.argtypes = [term_t, c_int]
+PL_unify_bool.restype = c_int
+
+PL_unify_list = _lib.PL_unify_list
+PL_unify_list.argtypes = [term_t, term_t, term_t]
+PL_unify_list.restype = c_int
+
+PL_unify_atom_chars = _lib.PL_unify_atom_chars
+PL_unify_atom_chars.argtypes = [term_t, c_char_p]
+PL_unify_atom_chars.restype = c_int
+
+PL_foreign_control = _lib.PL_foreign_control
+PL_foreign_control.argtypes = [control_t]
+PL_foreign_control.restypes = c_int
+
+PL_foreign_context_address = _lib.PL_foreign_context_address
+PL_foreign_context_address.argtypes = [control_t]
+PL_foreign_context_address.restypes = c_void_p
+
+PL_retry_address = _lib._PL_retry_address
+PL_retry_address.argtypes = [c_void_p]
+PL_retry_address.restypes = foreign_t
+
 PL_unify = _lib.PL_unify
 PL_unify.restype = c_int
+
+PL_succeed = 1
+PL_PRUNED = 1
 
 #PL_EXPORT(int)          PL_unify_arg(int index, term_t t, term_t a) WUNUSED;
 PL_unify_arg = _lib.PL_unify_arg
@@ -1135,25 +1270,41 @@ PL_new_module.restype = module_t
 
 PL_is_initialised = _lib.PL_is_initialised
 
+intptr_t = c_long
+ssize_t = intptr_t
+wint_t = c_uint
 
-
-#typedef struct
-#{
+# typedef struct
+# {
 #  int __count;
 #  union
 #  {
 #    wint_t __wch;
 #    char __wchb[4];
 #  } __value;            /* Value so far.  */
-#} __mbstate_t;
+# } __mbstate_t;
+
+#                /*******************************
+#                *          THREADING           *
+#                *******************************/
+
+PL_thread_self = _lib.PL_thread_self
+PL_thread_self.restype = c_int
+
+PL_thread_attach_engine = _lib.PL_thread_attach_engine
+PL_thread_attach_engine.argtypes = [c_void_p]
+PL_thread_attach_engine.restype = c_int
+
 
 class _mbstate_t_value(Union):
-    _fields_ = [("__wch",wint_t),
-                ("__wchb",c_char*4)]
+    _fields_ = [("__wch", wint_t),
+                ("__wchb", c_char * 4)]
+
 
 class mbstate_t(Structure):
-    _fields_ = [("__count",c_int),
-                ("__value",_mbstate_t_value)]
+    _fields_ = [("__count", c_int),
+                ("__value", _mbstate_t_value)]
+
 
 # stream related funcs
 Sread_function = CFUNCTYPE(ssize_t, c_void_p, c_char_p, c_size_t)
