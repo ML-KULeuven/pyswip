@@ -116,7 +116,7 @@ class Prolog:
                         except AttributeError:
                             v = {}
                             for r in [x.value for x in t]:
-                                r = normalize_values(r)
+                                # r = normalize_values(r)
                                 v.update(r)
                         yield v
                     else:
