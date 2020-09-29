@@ -178,6 +178,11 @@ class Variable(object):
             putList(ref, value)
             value = ref
             fun = PL_unify
+        elif type(value) == Term:
+            ref = PL_new_term_ref(1)
+            putTerm(ref, value)
+            value=ref
+            fun = PL_unify
         else:
             raise TypeError('Cannot unify {} with value {} due to the value unknown type {}'.
                             format(self, value, type(value)))
