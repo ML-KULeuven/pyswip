@@ -124,7 +124,10 @@ class Prolog:
 
                 if PL_exception(swipl_qid):
                     term = getTerm(PL_exception(swipl_qid))
-
+                    if term.value == 'time_limit_exceeded':
+                        raise TimeoutError()
+                    if term.args[0].value == 'resource_error(stack)':
+                        raise MemoryError()
                     raise PrologError("".join(["Caused by: '", query, "'. ",
                                                "Returned: '", str(term), "'."]))
 
