@@ -128,6 +128,8 @@ class Prolog:
                         raise TimeoutError()
                     if term.args[0].value == 'resource_error(stack)':
                         raise MemoryError()
+                    if term.args[0].value == 'evaluation_error(float_overflow)':
+                        raise OverflowError
                     raise PrologError("".join(["Caused by: '", query, "'. ",
                                                "Returned: '", str(term), "'."]))
 
