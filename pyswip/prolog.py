@@ -116,7 +116,7 @@ class Prolog:
                         except AttributeError:
                             v = {}
                             for r in [x.value for x in t]:
-                                r = normalize_values(r)
+                                # r = normalize_values(r)
                                 v.update(r)
                         yield v
                     else:
@@ -124,7 +124,12 @@ class Prolog:
 
                 if PL_exception(swipl_qid):
                     term = getTerm(PL_exception(swipl_qid))
-
+                    if term.value == 'time_limit_exceeded':
+                        raise TimeoutError()
+                    if term.args[0].value == 'resource_error(stack)':
+                        raise MemoryError()
+                    if term.args[0].value == 'evaluation_error(float_overflow)':
+                        raise OverflowError
                     raise PrologError("".join(["Caused by: '", query, "'. ",
                                                "Returned: '", str(term), "'."]))
 

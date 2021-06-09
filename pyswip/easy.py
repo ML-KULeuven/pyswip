@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 
 
 # pyswip.easy -- PySwip helper functions
@@ -187,7 +187,7 @@ class Variable(object):
             value = value.handle
         elif isstr(value):
             fun = PL_unify_string_chars
-            value = value.encode()
+            value = value.encode('utf-8')
         elif type(value) == int:
             fun = PL_unify_integer
         elif type(value) == bool:
@@ -195,7 +195,15 @@ class Variable(object):
         elif type(value) == float:
             fun = PL_unify_float
         elif type(value) == list:
-            fun = PL_unify_list
+            ref = PL_new_term_ref(1)
+            putList(ref, value)
+            value = ref
+            fun = PL_unify
+        elif type(value) == Term:
+            ref = PL_new_term_ref(1)
+            putTerm(ref, value)
+            value=ref
+            fun = PL_unify
         else:
             raise TypeError('Cannot unify {} with value {} due to the value unknown type {}'.
                             format(self, value, type(value)))
@@ -333,9 +341,18 @@ def _unifier(arity, *args):
     #if PL_is_variable(args[0]):
     #    args[0].unify(args[1])
     try:
-        return {args[0].value:args[1].value}
+        v1 = args[0].value
     except AttributeError:
-        return {args[0].value:args[1]}
+        v1 = args[0]
+    try:
+        v2 = args[1].value
+    except AttributeError:
+        v2 = args[1]
+    return {v1:v2}
+    #try:
+    #    return {args[0].value:args[1].value}
+    #except AttributeError:
+    #    return {args[0].value:args[1]}
 
 _unify = Functor("=", 2)
 Functor.func[_unify.handle] = _unifier
@@ -350,6 +367,8 @@ def putTerm(term, value):
         PL_put_atom_chars(term, value)
     elif isinstance(value, int):
         PL_put_integer(term, value)
+    elif isinstance(value, float):
+        PL_put_float(term, value)
     elif isinstance(value, Variable):
         value.put(term)
     elif isinstance(value, list):
