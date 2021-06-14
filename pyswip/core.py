@@ -1106,8 +1106,7 @@ PL_retry_address = _lib._PL_retry_address
 PL_retry_address.argtypes = [c_void_p]
 PL_retry_address.restypes = foreign_t
 
-=======
->>>>>>> Added ThreadedProlog
+
 PL_unify = _lib.PL_unify
 PL_unify.restype = c_int
 

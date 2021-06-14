@@ -345,19 +345,11 @@ def _unifier(arity, *args):
     #    args[0].unify(args[1])
     try:
         v1 = args[0].value
-<<<<<<< HEAD
     except AttributeError:
         v1 = args[0]
     try:
         v2 = args[1].value
     except AttributeError:
-=======
-    except AttributeError:
-        v1 = args[0]
-    try:
-        v2 = args[1].value
-    except AttributeError:
->>>>>>> yuce-master
         v2 = args[1]
     return {v1:v2}
     #try:
