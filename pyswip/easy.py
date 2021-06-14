@@ -97,13 +97,14 @@ class Atom(object):
     value = property(get_value)
 
     def __str__(self):
-        if self.chars is not None:
-            return self.value
-        else:
-            return self.__repr__()
+        # if self.chars is not None:
+        #     return self.value
+        # else:
+        return self.__repr__()
 
     def __repr__(self):
-        return str(self.handle).join(["Atom('", "')"])
+        return self.value
+        # return str(self.handle).join(["Atom('", "')"])
 
     def __eq__(self, other):
         if type(self) != type(other):
@@ -188,9 +189,6 @@ class Variable(object):
         elif isstr(value):
             fun = PL_unify_string_chars
             value = value.encode()
-        if type(value) == str:
-            fun = PL_unify_atom_chars
-            value = value.encode('utf-8')
         elif type(value) == int:
             fun = PL_unify_integer
         elif type(value) == bool:
@@ -319,15 +317,19 @@ class Functor(object):
         return Term(t)
 
     def __str__(self):
+        # if self.name is not None and self.arity is not None:
+        #     return "%s(%s)" % (self.name,
+        #                        ', '.join([str(arg) for arg in self.args]))
+        # else:
+        return self.__repr__()
+
+    def __repr__(self):
         if self.name is not None and self.arity is not None:
             return "%s(%s)" % (self.name,
                                ', '.join([str(arg) for arg in self.args]))
         else:
-            return self.__repr__()
-
-    def __repr__(self):
-        return "".join(["Functor(", ",".join(str(x) for x
-            in [self.handle,self.arity]+self.args), ")"])
+            return "".join(["Functor(", ",".join(str(x) for x
+                in [self.handle,self.arity]+self.args), ")"])
 
     def __eq__(self, other):
         if type(self) != type(other):

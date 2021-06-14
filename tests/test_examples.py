@@ -294,3 +294,5 @@ def example_path(path):
     import os.path
     return os.path.normpath(os.path.join(os.path.split(os.path.abspath(__file__))[0], "..", "examples", path)).replace("\\", "\\\\")
 
+if __name__ == '__main__':
+    unittest.main()

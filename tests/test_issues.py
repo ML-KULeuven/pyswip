@@ -290,3 +290,7 @@ class TestIssues(unittest.TestCase):
         soln = [s["Y"] for s in p.query("friend(john,Y), father(Y,kur)",
                                          maxresult=1)]
         self.assertEqual(soln[0], "son(miki)")
+
+
+if __name__ == '__main__':
+    unittest.main()
