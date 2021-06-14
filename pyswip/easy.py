@@ -23,7 +23,16 @@
 # SOFTWARE.
 
 
+import sys
+
 from pyswip.core import *
+
+
+# For backwards compability with Python 2 64bit
+if sys.version_info < (3,):
+    integer_types = (int, long,)
+else:
+    integer_types = (int,)
 
 
 class InvalidTypeError(TypeError):
@@ -67,7 +76,7 @@ class Atom(object):
 
         if isinstance(term, Term):
             term = term.handle
-        elif not isinstance(term, (c_void_p, int)):
+        elif not isinstance(term, (c_void_p, integer_types)):
             raise ArgumentTypeError((str(Term), str(c_void_p)), str(type(term)))
 
         a = atom_t()
@@ -164,7 +173,22 @@ class Variable(object):
             self.chars = self.chars.decode()
 
     def unify(self, value):
-        if isstr(value):
+        if self.handle is None:
+            t = PL_new_term_ref(self.handle)
+        else:
+            t = PL_copy_term_ref(self.handle)
+
+        self._fun(value, t)
+        self.handle = t
+
+    def _fun(self, value, t):
+        if type(value) == Atom:
+            fun = PL_unify_atom
+            value = value.handle
+        elif isstr(value):
+            fun = PL_unify_string_chars
+            value = value.encode()
+        if type(value) == str:
             fun = PL_unify_atom_chars
             value = value.encode('utf-8')
         elif type(value) == int:
@@ -187,26 +211,17 @@ class Variable(object):
             raise TypeError('Cannot unify {} with value {} due to the value unknown type {}'.
                             format(self, value, type(value)))
 
-        if self.handle is None:
-            t = PL_new_term_ref(self.handle)
-        else:
-            t = PL_copy_term_ref(self.handle)
-
         if type(value) == list:
             a = PL_new_term_ref(self.handle)
-            if type(value[0]) == int:
-                element_fun = PL_unify_integer
-            elif type(value[0]) == float:
-                element_fun = PL_unify_float
-            else:
-                raise
-            if value:
-                for element in value:
-                    fun(t, a, t)
-                    element_fun(a, element)
+            list_term = t
+            for element in value:
+                tail_term = PL_new_term_ref(self.handle)
+                fun(list_term, a, tail_term)
+                self._fun(element, a)
+                list_term = tail_term
+            PL_unify_nil(list_term)
         else:
             fun(t, value)
-        self.handle = t
 
     def get_value(self):
         return getTerm(self.handle)
@@ -274,7 +289,7 @@ class Functor(object):
 
         if isinstance(term, Term):
             term = term.handle
-        elif not isinstance(term, (c_void_p, int)):
+        elif not isinstance(term, (c_void_p, integer_types)):
             raise ArgumentTypeError((str(Term), str(int)), str(type(term)))
 
         f = functor_t()
@@ -330,11 +345,19 @@ def _unifier(arity, *args):
     #    args[0].unify(args[1])
     try:
         v1 = args[0].value
+<<<<<<< HEAD
     except AttributeError:
         v1 = args[0]
     try:
         v2 = args[1].value
     except AttributeError:
+=======
+    except AttributeError:
+        v1 = args[0]
+    try:
+        v2 = args[1].value
+    except AttributeError:
+>>>>>>> yuce-master
         v2 = args[1]
     return {v1:v2}
     #try:

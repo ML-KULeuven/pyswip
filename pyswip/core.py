@@ -1065,6 +1065,7 @@ PL_unify_atom_chars.restype = c_int
 PL_unify_integer = _lib.PL_unify_integer
 PL_unify_atom_chars = _lib.PL_unify_atom_chars
 
+
 PL_unify_float = _lib.PL_unify_float
 PL_unify_float.argtypes = [term_t, c_double]
 PL_unify_float.restype = c_int
@@ -1077,9 +1078,21 @@ PL_unify_list = _lib.PL_unify_list
 PL_unify_list.argtypes = [term_t, term_t, term_t]
 PL_unify_list.restype = c_int
 
+PL_unify_nil = _lib.PL_unify_nil
+PL_unify_nil.argtypes = [term_t]
+PL_unify_nil.restype = c_int
+
+PL_unify_atom = _lib.PL_unify_atom
+PL_unify_atom.argtypes = [term_t, atom_t]
+PL_unify_atom.restype = c_int
+
 PL_unify_atom_chars = _lib.PL_unify_atom_chars
 PL_unify_atom_chars.argtypes = [term_t, c_char_p]
 PL_unify_atom_chars.restype = c_int
+
+PL_unify_string_chars = _lib.PL_unify_string_chars
+PL_unify_string_chars.argtypes = [term_t, c_char_p]
+PL_unify_string_chars.restype = c_void_p
 
 PL_foreign_control = _lib.PL_foreign_control
 PL_foreign_control.argtypes = [control_t]
@@ -1093,6 +1106,8 @@ PL_retry_address = _lib._PL_retry_address
 PL_retry_address.argtypes = [c_void_p]
 PL_retry_address.restypes = foreign_t
 
+=======
+>>>>>>> Added ThreadedProlog
 PL_unify = _lib.PL_unify
 PL_unify.restype = c_int
 
