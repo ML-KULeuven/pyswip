@@ -31,7 +31,7 @@ import unittest
 import doctest
 
 import pyswip.prolog as pl  # This implicitly tests library loading code
-
+from pyswip.easy import Functor, Atom
 
 class TestProlog(unittest.TestCase):
     """
@@ -74,15 +74,17 @@ class TestProlog(unittest.TestCase):
     def test_prolog_functor_in_list(self):
         p = pl.Prolog()
         p.assertz('f([g(a,b),h(a,b,c)])')
-        self.assertEqual([{"L": [u"g(a, b)", u"h(a, b, c)"]}], list(p.query("f(L)")))
+        result = list(p.query("f(L)"))
+        self.assertEqual('[g(a, b), h(a, b, c)]', str(result[0]['L']))
         p.retract("f([g(a,b),h(a,b,c)])")
 
     def test_prolog_functor_in_functor(self):
         p = pl.Prolog()
         p.assertz("f([g([h(a,1), h(b,1)])])")
-        self.assertEqual([{'G': [u"g(['h(a, 1)', 'h(b, 1)'])"]}], list(p.query('f(G)')))
+        result = list(p.query('f(G)'))
+        self.assertEqual('[g([h(a, 1), h(b, 1)])]', str(result[0]['G']))
         p.assertz("a([b(c(x), d([y, z, w]))])")
-        self.assertEqual([{'B': [u"b(c(x), d(['y', 'z', 'w']))"]}], list(p.query('a(B)')))
+        self.assertEqual("[b(c(x), d([y, z, w]))]", str(next(p.query('a(B)'))['B']))
         p.retract("f([g([h(a,1), h(b,1)])])")
         p.retract("a([b(c(x), d([y, z, w]))])")
 
@@ -111,3 +113,7 @@ class TestProlog(unittest.TestCase):
         prolog = pl.Prolog()
         prolog.consult("tests/test_read.pl")
         list(prolog.query('read_file("tests/test_read.pl", S)'))
+
+
+if __name__ == '__main__':
+    unittest.main()
